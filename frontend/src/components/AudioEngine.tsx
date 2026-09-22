@@ -16,17 +16,21 @@ export function AudioEngine() {
     const el = getAudio();
     el.volume = usePlayerStore.getState().volume;
 
-    const onTime = () => sync({ progress: el.currentTime });
-    const onMeta = () => sync({ duration: el.duration || 0 });
-    const onPlay = () => sync({ isPlaying: true });
-    const onPause = () => sync({ isPlaying: false });
+    // While a YouTube-embed track is current, the <audio> element is idle and
+    // its late events (e.g. the pause from switching engines) must be ignored.
+    const idle = () => !!usePlayerStore.getState().current?.youtubeId;
+    const onTime = () => !idle() && sync({ progress: el.currentTime });
+    const onMeta = () => !idle() && sync({ duration: el.duration || 0 });
+    const onPlay = () => !idle() && sync({ isPlaying: true });
+    const onPause = () => !idle() && sync({ isPlaying: false });
+    const onEnd = () => !idle() && onEnded();
 
     el.addEventListener('timeupdate', onTime);
     el.addEventListener('loadedmetadata', onMeta);
     el.addEventListener('durationchange', onMeta);
     el.addEventListener('play', onPlay);
     el.addEventListener('pause', onPause);
-    el.addEventListener('ended', onEnded);
+    el.addEventListener('ended', onEnd);
 
     return () => {
       el.removeEventListener('timeupdate', onTime);
@@ -34,7 +38,7 @@ export function AudioEngine() {
       el.removeEventListener('durationchange', onMeta);
       el.removeEventListener('play', onPlay);
       el.removeEventListener('pause', onPause);
-      el.removeEventListener('ended', onEnded);
+      el.removeEventListener('ended', onEnd);
     };
   }, [sync, onEnded]);
 

@@ -12,7 +12,7 @@ import { SongMenu } from '@/components/SongMenu';
 import type { Song } from '@/lib/types';
 
 interface SearchResults {
-  songs: { id: string; title: string; subtitle: string; cover?: string; streamUrl: string }[];
+  songs: { id: string; title: string; subtitle: string; cover?: string; streamUrl: string; youtubeId?: string | null }[];
   artists: { id: string; title: string; subtitle: string; cover?: string }[];
   albums: { id: string; title: string; subtitle: string; cover?: string }[];
   playlists: { id: string; title: string; subtitle: string; cover?: string }[];
@@ -93,6 +93,7 @@ function SearchInner() {
                   title: s.title,
                   duration: 0,
                   streamUrl: s.streamUrl,
+                  youtubeId: s.youtubeId,
                   cover: s.cover,
                   artist: { id: '', name: s.subtitle, slug: '' },
                 } as Song)

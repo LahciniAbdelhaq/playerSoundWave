@@ -7,6 +7,8 @@ import { usePlayerStore } from '@/stores/player';
 import { useUiStore } from '@/stores/ui';
 import { useIsLiked, useToggleFavorite } from '@/hooks/useFavorites';
 import type { LyricsResponse } from '@/hooks/useLyrics';
+import { isPreview } from '@/lib/types';
+import { toast } from '@/stores/toast';
 
 function fmt(s: number) {
   if (!Number.isFinite(s) || s < 0) s = 0;
@@ -30,12 +32,16 @@ export function Player() {
   const liked = useIsLiked(current?.id);
   const toggleFav = useToggleFavorite();
   const toggleLike = () => {
+    if (isPreview(current)) {
+      toast.info('Not in your library yet', 'Use “Import & play” to save it, then like it.');
+      return;
+    }
     if (current?.id) toggleFav.mutate({ songId: current.id, liked });
   };
 
   // Prefetch lyrics as soon as a track starts so opening the panel is instant.
   useEffect(() => {
-    if (!current?.id) return;
+    if (!current?.id || isPreview(current)) return;
     qc.prefetchQuery({
       queryKey: ['lyrics', current.id],
       queryFn: () => api.get<LyricsResponse>(`/api/songs/${current.id}/lyrics`),

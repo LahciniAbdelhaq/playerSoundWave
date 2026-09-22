@@ -54,6 +54,7 @@ export class AlbumsService {
         duration: s.duration,
         plays: s.plays,
         streamUrl: `/api/songs/${s.id}/stream`,
+        youtubeId: this.storage.linkedYoutubeId(s),
         cover: this.storage.songCover({ ...s, album: { cover: album.cover } }),
       })),
     };

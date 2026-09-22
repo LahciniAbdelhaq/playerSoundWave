@@ -11,6 +11,11 @@ export type StorageBucket =
   | 'albums'
   | 'playlists';
 
+/** 11-char video id from any common YouTube URL shape. */
+export function youtubeVideoId(url?: string | null): string | null {
+  return url?.match(/(?:v=|\/|youtu\.be\/|embed\/|shorts\/)([\w-]{11})(?:[?&#]|$)/)?.[1] ?? null;
+}
+
 /**
  * Two drivers, picked by STORAGE_DRIVER:
  *  - "local" (dev): files on disk; returns *relative* paths (e.g. "music/abc.mp3")
@@ -58,10 +63,22 @@ export class StorageService {
     const stored = this.url(song.coverPath) ?? this.url(song.album?.cover);
     if (stored) return stored;
     if (song.source !== 'YOUTUBE') return null;
-    const id = song.sourceUrl?.match(
-      /(?:v=|\/|youtu\.be\/|embed\/|shorts\/)([\w-]{11})(?:[?&#]|$)/,
-    )?.[1];
+    const id = youtubeVideoId(song.sourceUrl);
     return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+  }
+
+  /**
+   * Video id for a *linked* YouTube track: one saved without audio (downloads
+   * blocked, e.g. on Vercel) that the player streams via YouTube's embed.
+   * Null for every song that has a stored audio file.
+   */
+  linkedYoutubeId(song: {
+    filePath?: string | null;
+    source?: string | null;
+    sourceUrl?: string | null;
+  }): string | null {
+    if (song.source !== 'YOUTUBE' || song.filePath) return null;
+    return youtubeVideoId(song.sourceUrl);
   }
 
   async save(bucket: StorageBucket, fileName: string, data: Buffer): Promise<string> {

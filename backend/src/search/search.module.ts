@@ -49,6 +49,7 @@ export class SearchService {
         subtitle: s.artist.name,
         cover: this.storage.songCover(s),
         streamUrl: `/api/songs/${s.id}/stream`,
+        youtubeId: this.storage.linkedYoutubeId(s),
       })),
       artists: artists.map((a) => ({
         id: a.id,

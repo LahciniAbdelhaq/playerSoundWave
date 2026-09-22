@@ -65,7 +65,7 @@ The browser only talks to the frontend domain; Next.js rewrites `/api/*` to the 
 ## Free-plan limits to know
 
 - **Upload size: 4.5 MB per file.** Vercel functions reject larger request bodies, so bigger MP3/FLAC uploads fail. (Fix later by uploading straight from the browser to Blob with `@vercel/blob/client`.)
-- **YouTube import/search may be blocked.** YouTube often refuses requests from cloud IPs ("confirm you're not a bot"). Uploads still work.
+- **YouTube downloads are blocked on Vercel** ("confirm you're not a bot"). Search works, **Play** streams through YouTube's embedded player, and **Import & play** saves a *linked* track (in your library, streamed from YouTube) instead of an MP3. Locally, import downloads the MP3 as usual.
 - **Function time limit: 300 s**, enough for normal imports.
 - **Blob: 1 GB storage** and limited transfer per month on Hobby. Neon free: 0.5 GB.
 - **Hobby plan is for non-commercial use.**

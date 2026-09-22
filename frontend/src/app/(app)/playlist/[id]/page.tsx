@@ -57,6 +57,7 @@ export default function PlaylistPage({ params }: { params: Promise<{ id: string 
     title: t.title,
     duration: t.duration,
     streamUrl: t.streamUrl,
+    youtubeId: t.youtubeId,
     cover: t.cover,
     artist: t.artist,
     album: t.album,

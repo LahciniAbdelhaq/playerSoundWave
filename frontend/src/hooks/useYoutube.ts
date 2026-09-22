@@ -22,8 +22,32 @@ export function useYoutubeSearch(query: string) {
   });
 }
 
+/**
+ * Import a search result into the library. Title/channel/duration are sent
+ * along so the server can save a linked track when it can't download
+ * (YouTube blocks downloads from cloud hosts like Vercel).
+ */
 export function useYoutubeImport() {
   return useMutation({
-    mutationFn: (url: string) => api.post<Song>('/api/youtube/import', { url }),
+    mutationFn: (r: YoutubeResult) =>
+      api.post<Song>('/api/youtube/import', {
+        url: r.url,
+        title: r.title,
+        uploader: r.uploader,
+        duration: Math.round(r.duration) || undefined,
+      }),
   });
+}
+
+/** A search result as a playable, not-yet-imported track (YouTube embed). */
+export function youtubePreviewSong(r: YoutubeResult): Song {
+  return {
+    id: `yt:${r.id}`,
+    title: r.title,
+    duration: r.duration,
+    cover: r.thumbnail,
+    streamUrl: '',
+    youtubeId: r.id,
+    artist: { id: '', name: r.uploader, slug: '' },
+  };
 }

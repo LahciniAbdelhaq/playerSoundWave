@@ -35,6 +35,11 @@ export class StreamingController {
   ) {
     const song = await this.songs.findRaw(id);
 
+    // Linked YouTube tracks have no stored audio; the player uses the embed.
+    if (!song.filePath) {
+      throw new NotFoundException('This track streams from YouTube');
+    }
+
     // Blob driver: the CDN serves the file (with Range support) — just redirect.
     if (StorageService.isRemote(song.filePath)) {
       this.songs.incrementPlays(id).catch(() => undefined);

@@ -64,6 +64,7 @@ export class SongsService {
     source: s.source,
     cover: this.storage.songCover(s),
     streamUrl: `/api/songs/${s.id}/stream`,
+    youtubeId: this.storage.linkedYoutubeId(s),
     artist: s.artist,
     album: s.album,
     createdAt: s.createdAt,

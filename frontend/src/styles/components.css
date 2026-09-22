@@ -356,3 +356,15 @@
 .cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-5); }
 .flow { display: flex; flex-wrap: wrap; gap: var(--space-4); }
 @media (max-width: 760px){ .cols-2, .cols-3 { grid-template-columns: 1fr; } }
+
+/* =================== YOUTUBE MINI PLAYER =================== */
+/* Visible embed for YouTube-streamed tracks (previews + linked imports). */
+.yt-mini { position: fixed; right: 16px; bottom: calc(88px + 12px); z-index: 40;
+  width: 256px; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden;
+  background: #000; box-shadow: var(--shadow-3, 0 8px 24px rgba(0,0,0,.35)); display: none; }
+.yt-mini[data-active] { display: block; }
+.yt-mini-host, .yt-mini-host iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 720px){
+  /* above the fixed mini player (≈64px) + bottom tabs (56px) */
+  .yt-mini { right: 10px; bottom: calc(56px + 64px + 10px); width: 176px; }
+}

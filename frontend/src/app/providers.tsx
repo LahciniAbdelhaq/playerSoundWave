@@ -2,6 +2,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { AudioEngine } from '@/components/AudioEngine';
+import { YoutubeEngine } from '@/components/YoutubeEngine';
 import { Toaster } from '@/components/Toaster';
 import { SessionBootstrap } from '@/components/SessionBootstrap';
 
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       <AudioEngine />
+      <YoutubeEngine />
       <SessionBootstrap />
       {children}
       <Toaster />

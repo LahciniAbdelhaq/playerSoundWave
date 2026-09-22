@@ -45,6 +45,7 @@ export class HistoryService {
       artist: h.song.artist,
       cover: this.storage.songCover(h.song),
       streamUrl: `/api/songs/${h.song.id}/stream`,
+      youtubeId: this.storage.linkedYoutubeId(h.song),
       playedAt: h.playedAt,
     }));
   }

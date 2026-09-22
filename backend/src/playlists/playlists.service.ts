@@ -73,6 +73,7 @@ export class PlaylistsService {
         album: ps.song.album,
         cover: this.storage.songCover(ps.song),
         streamUrl: `/api/songs/${ps.song.id}/stream`,
+        youtubeId: this.storage.linkedYoutubeId(ps.song),
       })),
     };
   }

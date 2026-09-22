@@ -43,6 +43,7 @@ export class FavoritesService {
       album: f.song.album,
       cover: this.storage.songCover(f.song),
       streamUrl: `/api/songs/${f.song.id}/stream`,
+      youtubeId: this.storage.linkedYoutubeId(f.song),
       likedAt: f.createdAt,
     }));
   }

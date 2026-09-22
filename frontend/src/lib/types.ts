@@ -19,9 +19,18 @@ export interface Song {
   likes?: number;
   cover?: string | null;
   streamUrl: string;
+  /**
+   * Set for tracks played through YouTube's embed instead of streamUrl:
+   * search-result previews (id "yt:<videoId>", not in the library) and
+   * linked imports (saved without audio when the server can't download).
+   */
+  youtubeId?: string | null;
   artist: ArtistRef;
   album?: AlbumRef | null;
 }
+
+/** A YouTube search result being played without importing (not in the DB). */
+export const isPreview = (song?: Pick<Song, 'id'> | null) => !!song?.id.startsWith('yt:');
 
 export interface Artist extends ArtistRef {
   bio?: string | null;

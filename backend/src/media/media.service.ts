@@ -57,15 +57,22 @@ async function downloadYtdlp(): Promise<string> {
   return dest;
 }
 
+/**
+ * The server can't download from YouTube at all: yt-dlp missing, or YouTube's
+ * bot check (typical on cloud hosts like Vercel). Import falls back to saving
+ * a linked track that plays through YouTube's embed.
+ */
+export class YoutubeUnavailableError extends ServiceUnavailableException {}
+
 /** Turn a raw yt-dlp failure into a message the UI can show. */
 function ytdlpError(err: any): ServiceUnavailableException {
   const text = String(err?.message ?? err);
   if (err?.code === 'ENOENT') {
-    return new ServiceUnavailableException('yt-dlp is not installed on the server');
+    return new YoutubeUnavailableError('yt-dlp is not installed on the server');
   }
   if (/sign in to confirm|not a bot|HTTP Error 429/i.test(text)) {
-    return new ServiceUnavailableException(
-      'YouTube is blocking requests from this server (common on cloud hosts). Upload the file instead.',
+    return new YoutubeUnavailableError(
+      'YouTube is blocking downloads from this server (common on cloud hosts).',
     );
   }
   const last = text.trim().split('\n').pop() ?? 'unknown error';

@@ -2,10 +2,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/Icon';
 import { useUiStore } from '@/stores/ui';
-import { usePlayerStore, getAudio } from '@/stores/player';
+import { usePlayerStore, currentTime } from '@/stores/player';
 import { useLyrics, parseLrc } from '@/hooks/useLyrics';
 import { LikeButton } from '@/components/LikeButton';
 import { SongMenu } from '@/components/SongMenu';
+import { isPreview } from '@/lib/types';
 
 export function LyricsView() {
   const open = useUiStore((s) => s.lyricsOpen);
@@ -14,7 +15,7 @@ export function LyricsView() {
   const seek = usePlayerStore((s) => s.seek);
 
   // Lyrics are prefetched on play (see Player), so this is usually instant.
-  const { data, isFetching } = useLyrics(current?.id);
+  const { data, isFetching } = useLyrics(isPreview(current) ? undefined : current?.id);
   const lines = useMemo(
     () => (data?.syncedLyrics ? parseLrc(data.syncedLyrics) : []),
     [data?.syncedLyrics],
@@ -29,7 +30,7 @@ export function LyricsView() {
       return;
     }
     const tick = () => {
-      const t = getAudio().currentTime;
+      const t = currentTime();
       let idx = -1;
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].time <= t + 0.1) idx = i;
@@ -84,8 +85,12 @@ export function LyricsView() {
                 {current.artist?.name}
               </div>
             </div>
-            <LikeButton songId={current.id} size={18} />
-            <SongMenu songId={current.id} title={current.title} />
+            {!isPreview(current) && (
+              <>
+                <LikeButton songId={current.id} size={18} />
+                <SongMenu songId={current.id} title={current.title} />
+              </>
+            )}
           </div>
         )}
 

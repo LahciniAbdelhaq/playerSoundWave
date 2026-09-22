@@ -63,6 +63,7 @@ export class ArtistsService {
         plays: s.plays,
         cover: this.storage.songCover(s),
         streamUrl: `/api/songs/${s.id}/stream`,
+        youtubeId: this.storage.linkedYoutubeId(s),
       })),
     };
   }

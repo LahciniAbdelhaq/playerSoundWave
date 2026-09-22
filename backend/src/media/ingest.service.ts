@@ -31,12 +31,13 @@ export class IngestService {
 
   /**
    * Move a transcoded mp3 (absolute temp path) into storage and create the
-   * Song row. Returns the created song.
+   * Song row. Returns the created song. Without `mp3AbsPath` it creates a
+   * linked YouTube track (empty filePath) that the player streams via the embed.
    */
   async createSong(params: {
     title: string;
     artistName: string;
-    mp3AbsPath: string;
+    mp3AbsPath?: string;
     duration: number;
     source: SourceType;
     sourceUrl?: string;
@@ -44,8 +45,9 @@ export class IngestService {
     coverPath?: string;
   }) {
     const artist = await this.resolveArtist(params.artistName);
-    const fileName = `${randomUUID()}.mp3`;
-    const filePath = await this.storage.adopt('music', fileName, params.mp3AbsPath);
+    const filePath = params.mp3AbsPath
+      ? await this.storage.adopt('music', `${randomUUID()}.mp3`, params.mp3AbsPath)
+      : '';
 
     const song = await this.prisma.song.create({
       data: {
@@ -60,8 +62,21 @@ export class IngestService {
       },
       include: { artist: { select: { id: true, name: true, slug: true } } },
     });
+    return this.serialize(song);
+  }
 
-    // Return the same serialized shape the player expects (streamUrl + cover).
+  /** An already-imported YouTube song for this video, if any (serialized). */
+  async findYoutubeSong(videoId: string) {
+    const song = await this.prisma.song.findFirst({
+      where: { source: SourceType.YOUTUBE, sourceUrl: { contains: videoId } },
+      orderBy: { filePath: 'desc' }, // prefer a copy with downloaded audio
+      include: { artist: { select: { id: true, name: true, slug: true } } },
+    });
+    return song ? this.serialize(song) : null;
+  }
+
+  // Same shape the player expects from the other song endpoints.
+  private serialize(song: any) {
     return {
       id: song.id,
       title: song.title,
@@ -70,8 +85,9 @@ export class IngestService {
       likes: song.likes,
       source: song.source,
       artist: song.artist,
-      cover: this.storage.url(song.coverPath),
+      cover: this.storage.songCover(song),
       streamUrl: `/api/songs/${song.id}/stream`,
+      youtubeId: this.storage.linkedYoutubeId(song),
     };
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 import { create } from 'zustand';
 import type { Song } from '@/lib/types';
+import { youtube } from '@/lib/youtubePlayer';
 
 export type RepeatMode = 'off' | 'all' | 'one';
 
@@ -43,11 +44,33 @@ export function getAudio(): HTMLAudioElement {
   return audio;
 }
 
+/**
+ * Two engines: the <audio> element for stored files, YouTube's embed for
+ * tracks with a youtubeId (previews + linked imports). Only one plays at a time.
+ */
+const onYoutube = () => !!usePlayerStore.getState().current?.youtubeId;
+
 const load = (song: Song, autoplay: boolean) => {
   const el = getAudio();
+  if (song.youtubeId) {
+    el.pause();
+    youtube.load(song.youtubeId, autoplay);
+    return;
+  }
+  youtube.stop();
   el.src = song.streamUrl;
   el.load();
   if (autoplay) el.play().catch(() => undefined);
+};
+
+/** Playback position of whichever engine is active (used by the lyrics view). */
+export function currentTime(): number {
+  return onYoutube() ? youtube.currentTime() : getAudio().currentTime;
+}
+
+const applyVolume = (v: number) => {
+  getAudio().volume = v;
+  youtube.setVolume(v);
 };
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -87,9 +110,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   toggle: () => (get().isPlaying ? get().pause() : get().play()),
   play: () => {
     if (!get().current) return;
-    getAudio().play().catch(() => undefined);
+    if (onYoutube()) youtube.play();
+    else getAudio().play().catch(() => undefined);
   },
-  pause: () => getAudio().pause(),
+  pause: () => (onYoutube() ? youtube.pause() : getAudio().pause()),
 
   next: () => {
     const { queue, index, shuffle, repeat } = get();
@@ -124,24 +148,24 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   seek: (seconds) => {
-    getAudio().currentTime = seconds;
+    if (onYoutube()) youtube.seek(seconds);
+    else getAudio().currentTime = seconds;
     set({ progress: seconds });
   },
 
   setVolume: (v) => {
     const vol = Math.min(1, Math.max(0, v));
-    getAudio().volume = vol;
+    applyVolume(vol);
     set({ volume: vol, muted: vol === 0 });
   },
 
   toggleMute: () => {
     const { muted, volume } = get();
-    const el = getAudio();
     if (muted) {
-      el.volume = volume || 0.72;
+      applyVolume(volume || 0.72);
       set({ muted: false });
     } else {
-      el.volume = 0;
+      applyVolume(0);
       set({ muted: true });
     }
   },
