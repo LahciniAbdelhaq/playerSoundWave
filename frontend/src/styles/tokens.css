@@ -1,0 +1,249 @@
+/* =====================================================================
+   SoundWave — Design Tokens
+   Single source of truth. Figma page: "00 · Tokens"
+   Primitive tokens (raw values) → Semantic tokens (theme-aware).
+   ===================================================================== */
+
+:root {
+  /* ---- PRIMITIVE · BRAND GREEN (original SoundWave "Pulse") ---- */
+  --green-50:  #E9FEF1;
+  --green-100: #C6FBDC;
+  --green-200: #93F4BD;
+  --green-300: #58E998;
+  --green-400: #2CDB78;
+  --green-500: #15C966;   /* core brand */
+  --green-600: #0FA855;
+  --green-700: #0E8546;
+  --green-800: #0F6739;
+  --green-900: #0D4B2C;
+
+  /* ---- PRIMITIVE · SUPPORT ACCENTS (duotone / categories) ---- */
+  --aqua-400:  #38E0C8;
+  --aqua-500:  #15C7AD;
+  --violet-400:#9C8CFF;
+  --violet-500:#7C5CFF;
+  --amber-400: #FFC24B;
+  --amber-500: #FFB020;
+  --rose-400:  #FF6F86;
+  --rose-500:  #FF4D6D;
+  --sky-400:   #5CC8FF;
+  --sky-500:   #2BB0FF;
+
+  /* ---- PRIMITIVE · NEUTRALS (cool, cinematic) ---- */
+  --ink-0:   #FFFFFF;
+  --ink-25:  #F7F8F9;
+  --ink-50:  #EEF0F2;
+  --ink-100: #DDE0E5;
+  --ink-200: #C2C7CF;
+  --ink-300: #9CA2AD;
+  --ink-400: #767C88;
+  --ink-500: #565C68;
+  --ink-600: #3D434E;
+  --ink-700: #2A2F38;
+  --ink-800: #1B1E25;
+  --ink-850: #14171C;
+  --ink-900: #0E1014;
+  --ink-950: #090A0D;
+  --ink-1000:#050608;
+
+  /* ---- PRIMITIVE · SPACING (4px base) ---- */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+  --space-13: 128px;
+
+  /* ---- PRIMITIVE · RADIUS (medium roundness) ---- */
+  --radius-xs:  6px;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --radius-2xl: 28px;
+  --radius-3xl: 36px;
+  --radius-pill: 999px;
+
+  /* ---- PRIMITIVE · TYPE ---- */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --fs-display-2xl: 72px;
+  --fs-display-xl:  60px;
+  --fs-display-lg:  48px;
+  --fs-h1: 38px;
+  --fs-h2: 30px;
+  --fs-h3: 24px;
+  --fs-h4: 20px;
+  --fs-body-lg: 17px;
+  --fs-body-md: 15px;
+  --fs-body-sm: 13px;
+  --fs-caption: 12px;
+  --fs-overline: 11px;
+
+  --lh-tight: 1.05;
+  --lh-snug: 1.2;
+  --lh-normal: 1.45;
+  --lh-relaxed: 1.6;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 800;
+
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.12em;
+
+  /* ---- PRIMITIVE · MOTION ---- */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 340ms;
+  --dur-slower: 520ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- PRIMITIVE · GRID ---- */
+  --grid-columns: 12;
+  --grid-gutter: 24px;
+  --grid-margin: 32px;
+  --container-max: 1280px;
+
+  /* ---- BRAND CONSTANTS (theme independent) ---- */
+  --brand: var(--green-500);
+  --brand-hover: var(--green-400);
+  --brand-press: var(--green-600);
+  --brand-on: #04140B;            /* text on green */
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--green-500) 45%, transparent);
+}
+
+/* =====================================================================
+   SEMANTIC TOKENS — DARK (default)
+   ===================================================================== */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-app: var(--ink-950);
+  --bg-app-grad: radial-gradient(1200px 600px at 12% -10%, #11271c 0%, transparent 55%),
+                 radial-gradient(1000px 700px at 110% 0%, #0e1726 0%, transparent 50%),
+                 var(--ink-1000);
+  --bg-base: var(--ink-900);
+  --bg-raised: var(--ink-850);
+  --bg-elevated: var(--ink-800);
+  --bg-inset: var(--ink-1000);
+  --bg-hover: rgba(255,255,255,0.05);
+  --bg-active: rgba(255,255,255,0.08);
+
+  --surface-1: rgba(255,255,255,0.04);
+  --surface-2: rgba(255,255,255,0.07);
+  --surface-3: rgba(255,255,255,0.10);
+
+  --text-primary: #F6F7F8;
+  --text-secondary: #A7ACB6;
+  --text-tertiary: #71767F;
+  --text-disabled: #4B505A;
+  --text-inverse: var(--ink-950);
+
+  --border-subtle: rgba(255,255,255,0.07);
+  --border-default: rgba(255,255,255,0.11);
+  --border-strong: rgba(255,255,255,0.18);
+
+  --success: var(--green-400);
+  --success-bg: color-mix(in oklab, var(--green-500) 18%, transparent);
+  --warning: var(--amber-400);
+  --warning-bg: color-mix(in oklab, var(--amber-500) 18%, transparent);
+  --danger: var(--rose-400);
+  --danger-bg: color-mix(in oklab, var(--rose-500) 18%, transparent);
+  --info: var(--sky-400);
+  --info-bg: color-mix(in oklab, var(--sky-500) 18%, transparent);
+
+  /* glass */
+  --glass-bg: rgba(22, 26, 33, 0.55);
+  --glass-bg-strong: rgba(18, 21, 27, 0.72);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-highlight: rgba(255,255,255,0.10);
+  --glass-blur: 28px;
+  --glass-saturate: 160%;
+
+  /* elevation */
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.45);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.45);
+  --shadow-3: 0 10px 30px rgba(0,0,0,0.55);
+  --shadow-4: 0 20px 50px rgba(0,0,0,0.6);
+  --shadow-5: 0 32px 80px rgba(0,0,0,0.7);
+  --shadow-glow: 0 8px 30px color-mix(in oklab, var(--green-500) 35%, transparent);
+
+  --scrim: rgba(5, 6, 8, 0.66);
+}
+
+/* =====================================================================
+   SEMANTIC TOKENS — LIGHT
+   ===================================================================== */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-app: #F4F5F3;
+  --bg-app-grad: radial-gradient(1200px 600px at 10% -12%, #e3f6ea 0%, transparent 55%),
+                 radial-gradient(1000px 700px at 108% -4%, #e7eef7 0%, transparent 50%),
+                 #F1F2F0;
+  --bg-base: #FBFBFA;
+  --bg-raised: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-inset: #EFF0ED;
+  --bg-hover: rgba(10,14,20,0.04);
+  --bg-active: rgba(10,14,20,0.07);
+
+  --surface-1: rgba(12,16,22,0.03);
+  --surface-2: rgba(12,16,22,0.05);
+  --surface-3: rgba(12,16,22,0.08);
+
+  --text-primary: #0E1014;
+  --text-secondary: #51565F;
+  --text-tertiary: #82868F;
+  --text-disabled: #B3B7BE;
+  --text-inverse: #FBFBFA;
+
+  --border-subtle: rgba(10,14,20,0.07);
+  --border-default: rgba(10,14,20,0.12);
+  --border-strong: rgba(10,14,20,0.20);
+
+  --success: var(--green-700);
+  --success-bg: color-mix(in oklab, var(--green-500) 16%, white);
+  --warning: #B9750A;
+  --warning-bg: color-mix(in oklab, var(--amber-500) 22%, white);
+  --danger: #D63251;
+  --danger-bg: color-mix(in oklab, var(--rose-500) 16%, white);
+  --info: #1284C9;
+  --info-bg: color-mix(in oklab, var(--sky-500) 16%, white);
+
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-bg-strong: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(12,16,22,0.10);
+  --glass-highlight: rgba(255,255,255,0.7);
+  --glass-blur: 26px;
+  --glass-saturate: 165%;
+
+  --shadow-1: 0 1px 2px rgba(16,22,30,0.08);
+  --shadow-2: 0 4px 12px rgba(16,22,30,0.10);
+  --shadow-3: 0 10px 30px rgba(16,22,30,0.12);
+  --shadow-4: 0 20px 50px rgba(16,22,30,0.16);
+  --shadow-5: 0 32px 80px rgba(16,22,30,0.20);
+  --shadow-glow: 0 8px 30px color-mix(in oklab, var(--green-500) 30%, transparent);
+
+  --scrim: rgba(20, 24, 30, 0.34);
+}

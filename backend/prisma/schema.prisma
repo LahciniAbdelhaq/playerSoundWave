@@ -1,0 +1,165 @@
+// SoundWave Music — data model
+// Files (audio, covers, images) are stored on disk / S3; the DB holds paths only.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+// Production (Vercel) uses Postgres (Neon). Local dev keeps zero-setup SQLite:
+// `npm run db:local` derives prisma/schema.local.prisma from this file with the
+// provider swapped, so this file stays the single source of truth.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// Role + SourceType are stored as strings (values validated in app code via
+// src/common/enums.ts) so the schema is portable across SQLite and Postgres.
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  avatar    String?
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  playlists     Playlist[]
+  favorites     Favorite[]
+  history       History[]
+  refreshTokens RefreshToken[]
+  uploadedSongs Song[]         @relation("UploadedBy")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Artist {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  image     String?
+  bio       String?
+  listeners Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  albums Album[]
+  songs  Song[]
+
+  @@map("artists")
+}
+
+model Album {
+  id          String    @id @default(uuid())
+  title       String
+  cover       String?
+  artistId    String
+  artist      Artist    @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  releaseDate DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  songs Song[]
+
+  @@index([artistId])
+  @@map("albums")
+}
+
+model Song {
+  id        String     @id @default(uuid())
+  title     String
+  artistId  String
+  artist    Artist     @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  albumId   String?
+  album     Album?     @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  duration  Int        @default(0) // seconds
+  filePath  String                  // storage path to .mp3
+  coverPath String?
+  source    String     @default("UPLOAD")
+  sourceUrl String?
+  plays     Int        @default(0)
+  likes     Int        @default(0)
+  uploadedById String?
+  uploadedBy   User?    @relation("UploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  playlistSongs PlaylistSong[]
+  favorites     Favorite[]
+  history       History[]
+
+  @@index([artistId])
+  @@index([albumId])
+  @@map("songs")
+}
+
+model Playlist {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  image       String?
+  isPublic    Boolean  @default(true)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  songs PlaylistSong[]
+
+  @@index([userId])
+  @@map("playlists")
+}
+
+model PlaylistSong {
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  songId     String
+  song       Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  position   Int      @default(0)
+  addedAt    DateTime @default(now())
+
+  @@id([playlistId, songId])
+  @@index([playlistId])
+  @@map("playlist_songs")
+}
+
+model Favorite {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, songId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model History {
+  id       String   @id @default(uuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  songId   String
+  song     Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  playedAt DateTime @default(now())
+
+  @@index([userId, playedAt])
+  @@map("history")
+}

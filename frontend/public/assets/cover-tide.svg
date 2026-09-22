@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06151F"></stop>
+      <stop offset="1" stop-color="#2BB0FF"></stop>
+    </linearGradient>
+    <radialGradient id="r" cx="0.72" cy="0.28" r="0.9">
+      <stop offset="0" stop-color="#15C7AD" stop-opacity="0.85"></stop>
+      <stop offset="0.55" stop-color="#15C7AD" stop-opacity="0"></stop>
+    </radialGradient>
+    <filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix><feComponentTransfer><feFuncA type="linear" slope="0.05"></feFuncA></feComponentTransfer></filter>
+  </defs>
+  <rect width="600" height="600" fill="url(#g)"></rect>
+  <rect width="600" height="600" fill="url(#r)"></rect>
+  <circle cx="180" cy="432" r="180" fill="#2BB0FF" opacity="0.16"></circle>
+  <circle cx="444" cy="180" r="96" fill="#15C7AD" opacity="0.28"></circle>
+  <rect width="600" height="600" filter="url(#n)"></rect>
+</svg>

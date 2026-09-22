@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(psql --version)",
+      "Bash(docker --version)",
+      "Bash(ffmpeg -version)",
+      "Bash(yt-dlp --version)",
+      "Bash(npm install *)",
+      "Bash(mkdir -p frontend/src/styles)",
+      "Bash(cp \"../soundwave/css/tokens.css\" frontend/src/styles/tokens.css)",
+      "Bash(cp \"../soundwave/css/components.css\" frontend/src/styles/components.css)",
+      "Bash(cp \"../soundwave/css/app.css\" frontend/src/styles/app.css)",
+      "Bash(cp \"../soundwave/css/landing.css\" frontend/src/styles/landing.css)",
+      "Bash(npx prisma *)",
+      "Bash(npx nest *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(npx next *)",
+      "Bash(echo \"BACKEND EXIT: $?\")",
+      "PowerShell(pip install *)",
+      "Bash(echo \"BUILD EXIT: $?\")",
+      "Bash(node dist/main)",
+      "Bash(cp .env.example .env.local)",
+      "Bash(node node_modules/next/dist/bin/next dev -p 3000)",
+      "Bash(xargs grep -l \"from '@prisma/client'\")",
+      "Bash(sed -i \"s#import { Role, User } from '@prisma/client';#import { User } from '@prisma/client';\\\\nimport { Role } from '../common/enums';#\" src/auth/auth.service.ts)",
+      "Bash(sed -i \"s#import { Role } from '@prisma/client';#import { Role } from '../common/enums';#\" src/admin/admin.module.ts src/auth/jwt.strategy.ts src/dashboard/dashboard.module.ts src/songs/songs.controller.ts)",
+      "Bash(sed -i \"s#import { Role } from '@prisma/client';#import { Role } from './enums';#\" src/common/decorators.ts src/common/guards.ts)",
+      "Bash(sed -i \"s#import { SourceType } from '@prisma/client';#import { SourceType } from '../common/enums';#\" src/media/ingest.service.ts src/upload/upload.module.ts src/youtube/youtube.module.ts)",
+      "Bash(npx ts-node *)",
+      "Bash(curl -s -X POST http://localhost:4000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"jordan@soundwave.fm\",\"password\":\"password123\"}')",
+      "Bash(curl -s \"http://localhost:4000/api/songs?take=2\")",
+      "Bash(echo \"BUILD: $?\")",
+      "Bash(curl -s \"http://localhost:4000/api/artists?take=2\")",
+      "Bash(grep -iA4 \"error\\\\|exception\")",
+      "Bash(curl -s \"http://localhost:4000/api/songs?sort=latest&take=1\")",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/search\" -TimeoutSec 60 -UseBasicParsing; Write-Output \"/search -> HTTP $\\($r.StatusCode\\)\" } catch { Write-Output \"ERROR $\\($_.Exception.Message\\)\" })",
+      "PowerShell($node = node --version; $npm = npm --version; Write-Output \"node $node / npm $npm\"; Write-Output \"--- ffmpeg ---\"; try { \\(Get-Command ffmpeg -ErrorAction Stop\\).Source } catch { \"not found\" }; Write-Output \"--- postgres listening 5432? ---\"; \\(Test-NetConnection -ComputerName localhost -Port 5432 -WarningAction SilentlyContinue\\).TcpTestSucceeded; Write-Output \"--- docker ---\"; try { docker --version } catch { \"not found\" })",
+      "Read(//tmp/**)"
+    ]
+  }
+}

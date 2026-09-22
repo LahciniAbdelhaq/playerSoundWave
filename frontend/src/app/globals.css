@@ -1,0 +1,12 @@
+/* Tailwind utilities layered on top of the ported SoundWave design system.
+   (preflight is disabled in tailwind.config.ts to preserve the design.) */
+@tailwind components;
+@tailwind utilities;
+
+/* Lucide-react renders <svg>; the design sized icons via [data-lucide].
+   Keep icon sizing consistent with the prototype. */
+svg.lucide {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
