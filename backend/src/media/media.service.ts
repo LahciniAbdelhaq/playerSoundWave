@@ -36,11 +36,26 @@ const ffmpegBin = (): string => {
   const bundled = require('ffmpeg-static') as string | null;
   return bundled ? executable(bundled) : 'ffmpeg';
 };
-const ytdlpBin = (): string => {
-  if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
-  const bundled = join(process.cwd(), 'bin', 'yt-dlp');
-  return existsSync(bundled) ? executable(bundled) : 'yt-dlp';
-};
+// Where the build step may have left the Linux binary (dist/media → ../../bin).
+const ytdlpCandidates = () => [
+  join(__dirname, '..', '..', 'bin', 'yt-dlp'),
+  join(process.cwd(), 'bin', 'yt-dlp'),
+];
+const YTDLP_URL = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux';
+
+/** Last resort on Vercel: fetch the standalone binary into the temp dir. */
+async function downloadYtdlp(): Promise<string> {
+  const dest = join(tmpdir(), 'sw-bin-yt-dlp');
+  if (!existsSync(dest)) {
+    const res = await fetch(YTDLP_URL);
+    if (!res.ok) throw new Error(`yt-dlp download failed: HTTP ${res.status}`);
+    const tmp = `${dest}.${randomUUID()}`;
+    await fs.writeFile(tmp, Buffer.from(await res.arrayBuffer()));
+    await fs.chmod(tmp, 0o755);
+    await fs.rename(tmp, dest);
+  }
+  return dest;
+}
 
 /** Turn a raw yt-dlp failure into a message the UI can show. */
 function ytdlpError(err: any): ServiceUnavailableException {
@@ -97,10 +112,28 @@ export class MediaService {
     });
   }
 
+  private ytdlpPath?: Promise<string>;
+
+  /** YTDLP_PATH → bundled bin/yt-dlp → (on Vercel) download → PATH. Cached. */
+  private resolveYtdlp(): Promise<string> {
+    this.ytdlpPath ??= (async () => {
+      if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
+      const bundled = ytdlpCandidates().find((p) => existsSync(p));
+      if (bundled) return executable(bundled);
+      if (process.env.VERCEL) return downloadYtdlp();
+      return 'yt-dlp';
+    })().catch((err) => {
+      this.ytdlpPath = undefined; // retry on the next request
+      throw err;
+    });
+    return this.ytdlpPath;
+  }
+
   /** Run yt-dlp; failures are logged in full and surfaced as a readable 503. */
   private async ytdlp(args: string[]): Promise<{ stdout: string }> {
     try {
-      return await this.run(ytdlpBin(), ['--no-warnings', '--no-cache-dir', ...args]);
+      const bin = await this.resolveYtdlp();
+      return await this.run(bin, ['--no-warnings', '--no-cache-dir', ...args]);
     } catch (err) {
       this.log.error(`yt-dlp failed: ${(err as Error).message}`);
       throw ytdlpError(err);
@@ -108,13 +141,14 @@ export class MediaService {
   }
 
   /** Diagnostics for GET /api/youtube/health: which binary, and does it run? */
-  ytdlpStatus() {
-    const path = ytdlpBin();
+  async ytdlpStatus() {
+    const searched = ytdlpCandidates().map((p) => ({ path: p, exists: existsSync(p) }));
     try {
+      const path = await this.resolveYtdlp();
       const version = execFileSync(path, ['--version'], { timeout: 30_000 }).toString().trim();
-      return { ok: true, path, version };
+      return { ok: true, path, version, searched };
     } catch (err: any) {
-      return { ok: false, path, error: String(err?.message ?? err).slice(0, 300) };
+      return { ok: false, error: String(err?.message ?? err).slice(0, 300), searched };
     }
   }
 
