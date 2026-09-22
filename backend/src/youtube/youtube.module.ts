@@ -40,6 +40,11 @@ export class YoutubeService {
     return this.media.youtubeSearch(q, Math.min(limit, 40));
   }
 
+  /** Is yt-dlp present and runnable on this server? */
+  health() {
+    return this.media.ytdlpStatus();
+  }
+
   /** Validate URL + return metadata for a preview before importing. */
   async preview(url: string) {
     if (!YT_RE.test(url)) throw new BadRequestException('Invalid YouTube URL');
@@ -72,6 +77,12 @@ export class YoutubeService {
 @Controller('youtube')
 export class YoutubeController {
   constructor(private youtube: YoutubeService) {}
+
+  @Public()
+  @Get('health')
+  health() {
+    return this.youtube.health();
+  }
 
   @Public()
   @Get('search')

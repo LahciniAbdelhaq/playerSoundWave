@@ -1,21 +1,61 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { spawn } from 'child_process';
-import { existsSync, promises as fs } from 'fs';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import { spawn, execFileSync } from 'child_process';
+import { accessSync, chmodSync, constants, copyFileSync, existsSync, promises as fs } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { basename, join } from 'path';
 import { randomUUID } from 'crypto';
 import { parseFile } from 'music-metadata';
+
+/**
+ * Serverless bundles can drop the executable bit on bundled binaries (and
+ * /var/task is read-only), so fall back to an executable copy in the temp dir.
+ */
+const execCache = new Map<string, string>();
+function executable(path: string): string {
+  const cached = execCache.get(path);
+  if (cached) return cached;
+  let resolved = path;
+  if (process.platform !== 'win32' && existsSync(path)) {
+    try {
+      accessSync(path, constants.X_OK);
+    } catch {
+      resolved = join(tmpdir(), `sw-bin-${basename(path)}`);
+      if (!existsSync(resolved)) copyFileSync(path, resolved);
+      chmodSync(resolved, 0o755);
+    }
+  }
+  execCache.set(path, resolved);
+  return resolved;
+}
 
 // Resolved at call time (not import time) so @nestjs/config has loaded .env.
 // Fallbacks cover Vercel, which has neither tool installed: ffmpeg comes from
 // the ffmpeg-static package, yt-dlp from bin/ (downloaded by scripts/fetch-ytdlp.mjs).
-const ffmpegBin = (): string =>
-  process.env.FFMPEG_PATH || (require('ffmpeg-static') as string | null) || 'ffmpeg';
+const ffmpegBin = (): string => {
+  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
+  const bundled = require('ffmpeg-static') as string | null;
+  return bundled ? executable(bundled) : 'ffmpeg';
+};
 const ytdlpBin = (): string => {
   if (process.env.YTDLP_PATH) return process.env.YTDLP_PATH;
   const bundled = join(process.cwd(), 'bin', 'yt-dlp');
-  return existsSync(bundled) ? bundled : 'yt-dlp';
+  return existsSync(bundled) ? executable(bundled) : 'yt-dlp';
 };
+
+/** Turn a raw yt-dlp failure into a message the UI can show. */
+function ytdlpError(err: any): ServiceUnavailableException {
+  const text = String(err?.message ?? err);
+  if (err?.code === 'ENOENT') {
+    return new ServiceUnavailableException('yt-dlp is not installed on the server');
+  }
+  if (/sign in to confirm|not a bot|HTTP Error 429/i.test(text)) {
+    return new ServiceUnavailableException(
+      'YouTube is blocking requests from this server (common on cloud hosts). Upload the file instead.',
+    );
+  }
+  const last = text.trim().split('\n').pop() ?? 'unknown error';
+  return new ServiceUnavailableException(`YouTube request failed: ${last.slice(0, 200)}`);
+}
 
 export interface YoutubeMeta {
   title: string;
@@ -57,6 +97,27 @@ export class MediaService {
     });
   }
 
+  /** Run yt-dlp; failures are logged in full and surfaced as a readable 503. */
+  private async ytdlp(args: string[]): Promise<{ stdout: string }> {
+    try {
+      return await this.run(ytdlpBin(), ['--no-warnings', '--no-cache-dir', ...args]);
+    } catch (err) {
+      this.log.error(`yt-dlp failed: ${(err as Error).message}`);
+      throw ytdlpError(err);
+    }
+  }
+
+  /** Diagnostics for GET /api/youtube/health: which binary, and does it run? */
+  ytdlpStatus() {
+    const path = ytdlpBin();
+    try {
+      const version = execFileSync(path, ['--version'], { timeout: 30_000 }).toString().trim();
+      return { ok: true, path, version };
+    } catch (err: any) {
+      return { ok: false, path, error: String(err?.message ?? err).slice(0, 300) };
+    }
+  }
+
   /** Transcode any input buffer (mp3/wav/flac) to a normalized MP3 file. */
   async transcodeToMp3(input: Buffer, originalExt = 'tmp'): Promise<string> {
     const inPath = join(tmpdir(), `sw-${randomUUID()}.${originalExt}`);
@@ -89,7 +150,7 @@ export class MediaService {
 
   /** Read YouTube metadata without downloading the media. */
   async youtubeMeta(url: string): Promise<YoutubeMeta> {
-    const { stdout } = await this.run(ytdlpBin(), ['-J', '--no-warnings', url]);
+    const { stdout } = await this.ytdlp(['-J', url]);
     const j = JSON.parse(stdout);
     return {
       title: j.title,
@@ -104,11 +165,10 @@ export class MediaService {
    * without downloading anything. Uses yt-dlp's `ytsearchN:` + flat playlist.
    */
   async youtubeSearch(query: string, limit = 20): Promise<YoutubeResult[]> {
-    const { stdout } = await this.run(ytdlpBin(), [
+    const { stdout } = await this.ytdlp([
       `ytsearch${limit}:${query}`,
       '--flat-playlist',
       '-J',
-      '--no-warnings',
     ]);
     const j = JSON.parse(stdout);
     const entries: any[] = Array.isArray(j.entries) ? j.entries : [];
@@ -133,11 +193,9 @@ export class MediaService {
    */
   async youtubeToMp3(url: string): Promise<string> {
     const id = randomUUID();
-    await this.run(ytdlpBin(), [
+    await this.ytdlp([
       '-f', 'bestaudio/best',
       '--no-playlist',
-      '--no-cache-dir',
-      '--no-warnings',
       '-o', join(tmpdir(), `sw-${id}.%(ext)s`),
       url,
     ]);

@@ -80,7 +80,13 @@ export function YoutubeResults({ query }: { query: string }) {
         <div>
           <div className="b-title">YouTube search unavailable</div>
           <div className="b-text">
-            The server needs <code>yt-dlp</code> installed (or run the API in Docker).
+            {error instanceof ApiError && error.status === 503 ? (
+              error.message
+            ) : (
+              <>
+                The server needs <code>yt-dlp</code> installed (or run the API in Docker).
+              </>
+            )}
           </div>
         </div>
       </div>
