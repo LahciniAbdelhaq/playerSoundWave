@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 
-// Note: pure-logic tests (parser, store) don't need the React plugin. Add
-// `@vitejs/plugin-react` here if/when you write component-render tests.
+// tsconfig uses "jsx": "preserve" (Next compiles JSX itself), so esbuild needs
+// to be told to use the automatic runtime — component-render tests (.tsx) need it.
 export default defineConfig({
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'jsdom',
     globals: true,
