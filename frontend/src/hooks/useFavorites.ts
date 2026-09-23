@@ -1,12 +1,17 @@
 'use client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 
 /** Set of liked song ids — drives the heart state everywhere. */
 export function useLikedIds() {
+  // Needs a session: without this the first render fires a guaranteed 401
+  // before SessionBootstrap has signed in.
+  const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['favorites', 'ids'],
     queryFn: () => api.get<string[]>('/api/favorites/ids'),
+    enabled: !!accessToken,
     staleTime: 60_000,
   });
 }

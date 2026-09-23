@@ -1,6 +1,7 @@
 'use client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 import type { Playlist } from '@/lib/types';
 
 export interface PlaylistSummary {
@@ -14,9 +15,12 @@ export interface PlaylistSummary {
 }
 
 export function useMyPlaylists() {
+  // Same as useLikedIds: skip until there's a session to authenticate with.
+  const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['playlists', 'mine'],
     queryFn: () => api.get<PlaylistSummary[]>('/api/playlists/mine'),
+    enabled: !!accessToken,
   });
 }
 

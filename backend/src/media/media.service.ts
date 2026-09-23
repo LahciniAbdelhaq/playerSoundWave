@@ -214,7 +214,9 @@ export class MediaService {
     const j = JSON.parse(stdout);
     const entries: any[] = Array.isArray(j.entries) ? j.entries : [];
     return entries
-      .filter((e) => e && e.id)
+      // Searches also return channels and playlists; only videos are playable,
+      // and their ids are always 11 characters.
+      .filter((e) => e && typeof e.id === 'string' && /^[\w-]{11}$/.test(e.id))
       .map((e) => ({
         id: e.id as string,
         title: e.title ?? 'Untitled',
