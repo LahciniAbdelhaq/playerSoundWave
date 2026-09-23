@@ -395,3 +395,4 @@
   .sr-item .yt-beats { display: inline-flex; }
   .sr-item .yt-import { --btn-pad-x: 8px; --btn-pad-y: 8px; }
 }
+.np-seeall { display: flex; width: 100%; justify-content: center; margin: 14px 0 6px; }

@@ -5,9 +5,38 @@ import { Icon } from '@/components/Icon';
 import { useUiStore } from '@/stores/ui';
 import { usePlayerStore } from '@/stores/player';
 import { useArtist } from '@/hooks/useCatalog';
+import { useYoutubeSearch, youtubePreviewSong } from '@/hooks/useYoutube';
 import { isPreview } from '@/lib/types';
 
 const FALLBACK = '/assets/cover-tide.svg';
+
+/** One compact row in the rail (queue track, artist track or album). */
+function Row({
+  cover,
+  title,
+  sub,
+  onPlay,
+}: {
+  cover?: string | null;
+  title: string;
+  sub: string;
+  onPlay: () => void;
+}) {
+  return (
+    <div className="friend" onClick={onPlay} style={{ cursor: 'pointer' }}>
+      <div className="av">
+        <div className="cover" style={{ borderRadius: 7 }}>
+          <img src={cover ?? FALLBACK} alt="" />
+        </div>
+      </div>
+      <div className="info">
+        <div className="n">{title}</div>
+        <div className="artist">{sub}</div>
+      </div>
+      <Icon name="play" size={16} />
+    </div>
+  );
+}
 
 /**
  * Right rail: what's playing now — a large poster you can switch between the
@@ -18,20 +47,32 @@ export function NowPlayingPanel() {
   const [view, setView] = useState<'song' | 'artist'>('song');
   const activityOpen = useUiStore((s) => s.activityOpen);
   const closeDrawers = useUiStore((s) => s.closeDrawers);
-  const { queue, index, current, isPlaying, playAt } = usePlayerStore();
+  const { queue, index, current, isPlaying, playAt, playSong } = usePlayerStore();
 
-  // Artist photo + track count come from the catalogue; previews aren't in it.
+  // Artist photo, songs and albums come from the catalogue. Previews aren't in
+  // it, so for those the artist's other songs come from a YouTube search.
   const slug = !isPreview(current) ? current?.artist?.slug : undefined;
-  const { data: artist } = useArtist(slug || '');
+  const { data: artist, isLoading: loadingArtist } = useArtist(slug || '');
+  const wantsYoutube = view === 'artist' && !slug;
+  const { data: ytSongs, isFetching: loadingYoutube } = useYoutubeSearch(
+    wantsYoutube ? current?.artist?.name ?? '' : '',
+  );
 
   // Artwork is the sensible default whenever the track changes.
   useEffect(() => setView('song'), [current?.id]);
 
   const artistName = current?.artist?.name ?? 'Unknown artist';
-  const artistHref = slug ? `/artist/${slug}` : `/search?q=${encodeURIComponent(artistName)}`;
+  const artistHref = slug
+    ? `/artist/${slug}`
+    : `/search?q=${encodeURIComponent(artistName)}&tab=youtube`;
   const poster =
     view === 'artist' ? artist?.image ?? current?.cover ?? FALLBACK : current?.cover ?? FALLBACK;
   const upNext = queue.slice(index + 1);
+  // Other songs by this artist, minus the one playing.
+  const artistSongs = (
+    slug ? artist?.topSongs ?? [] : (ytSongs ?? []).map(youtubePreviewSong)
+  ).filter((s) => s.id !== current?.id);
+  const loadingMore = slug ? loadingArtist : loadingYoutube;
 
   return (
     <aside
@@ -84,29 +125,71 @@ export function NowPlayingPanel() {
               ) : null}
             </div>
 
-            <div className="act-section">Next in queue</div>
-            {upNext.length > 0 ? (
-              upNext.map((s, i) => (
-                <div
-                  className="friend"
-                  key={`${s.id}-${i}`}
-                  onClick={() => playAt(index + 1 + i)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="av">
-                    <div className="cover" style={{ borderRadius: 7 }}>
-                      <img src={s.cover ?? FALLBACK} alt="" />
-                    </div>
-                  </div>
-                  <div className="info">
-                    <div className="n">{s.title}</div>
-                    <div className="artist">{s.artist.name}</div>
-                  </div>
-                  <Icon name="play" size={16} />
-                </div>
-              ))
+            {view === 'song' ? (
+              <>
+                <div className="act-section">Next in queue</div>
+                {upNext.length > 0 ? (
+                  upNext.map((s, i) => (
+                    <Row
+                      key={`${s.id}-${i}`}
+                      cover={s.cover}
+                      title={s.title}
+                      sub={s.artist.name}
+                      onPlay={() => playAt(index + 1 + i)}
+                    />
+                  ))
+                ) : (
+                  <div className="sr-empty">Nothing queued after this track.</div>
+                )}
+              </>
             ) : (
-              <div className="sr-empty">Nothing queued after this track.</div>
+              <>
+                <div className="act-section">More from {artistName}</div>
+                {artistSongs.length > 0 ? (
+                  artistSongs.map((s, i) => (
+                    <Row
+                      key={`${s.id}-${i}`}
+                      cover={s.cover}
+                      title={s.title}
+                      sub={s.artist.name}
+                      onPlay={() => playSong(s, artistSongs)}
+                    />
+                  ))
+                ) : (
+                  <div className="sr-empty">
+                    {loadingMore ? 'Looking for more…' : 'No other songs found.'}
+                  </div>
+                )}
+
+                {(artist?.albums?.length ?? 0) > 0 && (
+                  <>
+                    <div className="act-section">Albums</div>
+                    {artist!.albums!.map((al) => (
+                      <Link
+                        className="friend"
+                        href={`/album/${al.id}`}
+                        key={al.id}
+                        onClick={closeDrawers}
+                      >
+                        <div className="av">
+                          <div className="cover" style={{ borderRadius: 7 }}>
+                            <img src={al.cover ?? FALLBACK} alt="" />
+                          </div>
+                        </div>
+                        <div className="info">
+                          <div className="n">{al.title}</div>
+                          <div className="artist">Album</div>
+                        </div>
+                        <Icon name="chevron-right" size={16} />
+                      </Link>
+                    ))}
+                  </>
+                )}
+
+                <Link className="btn btn-secondary sm np-seeall" href={artistHref} onClick={closeDrawers}>
+                  See everything from {artistName}
+                </Link>
+              </>
             )}
           </>
         ) : (

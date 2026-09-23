@@ -32,7 +32,9 @@ type Tab = 'library' | 'youtube';
 function SearchInner() {
   const params = useSearchParams();
   const [q, setQ] = useState(params.get('q') ?? '');
-  const [tab, setTab] = useState<Tab>('library');
+  // ?tab=youtube — used when following an artist who isn't in the library yet,
+  // so the results they want are on screen straight away.
+  const [tab, setTab] = useState<Tab>(params.get('tab') === 'youtube' ? 'youtube' : 'library');
   const debounced = useDebounced(q);
   const playSong = usePlayerStore((s) => s.playSong);
 

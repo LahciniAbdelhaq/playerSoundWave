@@ -61,7 +61,7 @@ export function Player() {
   const artistSlug = !isPreview(current) ? current?.artist?.slug : undefined;
   const artistHref = artistSlug
     ? `/artist/${artistSlug}`
-    : `/search?q=${encodeURIComponent(artist)}`;
+    : `/search?q=${encodeURIComponent(artist)}&tab=youtube`;
 
   const onBar = (
     e: React.PointerEvent<HTMLDivElement>,
