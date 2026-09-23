@@ -50,10 +50,10 @@ export default function HomePage() {
             <b style={{ color: 'var(--text-primary)' }}>42 hours</b> this month — a new high.
           </div>
         </div>
-        <button className="btn btn-secondary sm">
+        <Link className="btn btn-secondary sm" href="/browse">
           <Icon name="history" size={16} />
           Listening history
-        </button>
+        </Link>
       </div>
 
       <div className="filter-row">

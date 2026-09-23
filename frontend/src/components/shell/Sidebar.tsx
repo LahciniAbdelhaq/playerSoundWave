@@ -9,7 +9,7 @@ import { toast } from '@/stores/toast';
 const NAV = [
   { href: '/', icon: 'house', label: 'Home' },
   { href: '/search', icon: 'search', label: 'Search', kbd: '⌘K' },
-  { href: '/browse', icon: 'compass', label: 'Browse' },
+  { href: '/browse', icon: 'history', label: 'History' },
   { href: '/radio', icon: 'radio', label: 'Live Radio' },
 ];
 

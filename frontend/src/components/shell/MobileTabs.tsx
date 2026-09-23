@@ -21,7 +21,7 @@ export function MobileTabs() {
         <Icon name="library-big" />Library
       </Link>
       <button onClick={openActivity}>
-        <Icon name="users" />Activity
+        <Icon name="music" />Playing
       </button>
     </nav>
   );

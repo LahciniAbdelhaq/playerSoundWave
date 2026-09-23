@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import { usePlayerStore } from '@/stores/player';
+import Link from 'next/link';
 import { useUiStore } from '@/stores/ui';
 import { useIsLiked, useToggleFavorite } from '@/hooks/useFavorites';
 import type { LyricsResponse } from '@/hooks/useLyrics';
@@ -28,6 +29,7 @@ export function Player() {
   const toggleLyrics = useUiStore((s) => s.toggleLyrics);
   const queueOpen = useUiStore((s) => s.queueOpen);
   const toggleQueue = useUiStore((s) => s.toggleQueue);
+  const openActivity = useUiStore((s) => s.openActivity);
   const qc = useQueryClient();
   const liked = useIsLiked(current?.id);
   const toggleFav = useToggleFavorite();
@@ -54,6 +56,12 @@ export function Player() {
   const cover = current?.cover ?? '/assets/cover-tide.svg';
   const title = current?.title ?? 'Neon Tide';
   const artist = current?.artist?.name ?? 'Solstate';
+  // The artist page lists everything they have; previews aren't in the catalogue,
+  // so those fall back to a search for the channel name.
+  const artistSlug = !isPreview(current) ? current?.artist?.slug : undefined;
+  const artistHref = artistSlug
+    ? `/artist/${artistSlug}`
+    : `/search?q=${encodeURIComponent(artist)}`;
 
   const onBar = (
     e: React.PointerEvent<HTMLDivElement>,
@@ -84,12 +92,25 @@ export function Player() {
     >
       <div className="player-desktop">
         <div className="np">
-          <div className="cover">
+          <div
+            className="cover np-open"
+            role="button"
+            tabIndex={0}
+            title="Show poster"
+            onClick={openActivity}
+            onKeyDown={(e) => e.key === 'Enter' && openActivity()}
+          >
             <img src={cover} alt="" id="npCover" />
           </div>
           <div className="meta">
             <div className="t" id="npTitle">{title}</div>
-            <div className="a" id="npArtist">{artist}</div>
+            {current ? (
+              <Link className="a np-link" id="npArtist" href={artistHref}>
+                {artist}
+              </Link>
+            ) : (
+              <div className="a" id="npArtist">{artist}</div>
+            )}
           </div>
           <button
             className={`like${liked ? ' on' : ''}`}
@@ -179,14 +200,22 @@ export function Player() {
         </div>
         <div className="np">
           <div
-            className="cover"
+            className="cover np-open"
+            role="button"
+            tabIndex={0}
+            title="Show poster"
+            onClick={openActivity}
             style={{ width: 46, height: 46, borderRadius: 7, overflow: 'hidden', flex: 'none' }}
           >
             <img src={cover} alt="" />
           </div>
           <div className="meta">
             <div className="t">{title}</div>
-            <div className="a">{artist}</div>
+            {current ? (
+              <Link className="a np-link" href={artistHref}>{artist}</Link>
+            ) : (
+              <div className="a">{artist}</div>
+            )}
           </div>
         </div>
         <div className="mctrl">

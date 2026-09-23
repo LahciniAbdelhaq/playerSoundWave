@@ -1,4 +1,5 @@
 'use client';
+import { useQueryClient } from '@tanstack/react-query';
 import { Icon } from '@/components/Icon';
 import {
   useYoutubeSearch,
@@ -18,6 +19,7 @@ function fmt(s: number) {
 
 function YoutubeRow({ r, results }: { r: YoutubeResult; results: YoutubeResult[] }) {
   const importMut = useYoutubeImport();
+  const qc = useQueryClient();
   const playSong = usePlayerStore((s) => s.playSong);
   const toggle = usePlayerStore((s) => s.toggle);
   const isCurrent = usePlayerStore((s) => s.current?.id === `yt:${r.id}`);
@@ -38,6 +40,9 @@ function YoutubeRow({ r, results }: { r: YoutubeResult; results: YoutubeResult[]
     importMut.mutate(r, {
       onSuccess: (song) => {
         toast.dismiss(id);
+        // The track is in the library now — refresh the lists that show it.
+        qc.invalidateQueries({ queryKey: ['songs'] });
+        qc.invalidateQueries({ queryKey: ['history'] });
         toast.success(
           song.youtubeId ? 'Saved to your library' : 'Imported — now playing',
           song.youtubeId ? `${song.title} (streams from YouTube)` : song.title,
@@ -72,8 +77,16 @@ function YoutubeRow({ r, results }: { r: YoutubeResult; results: YoutubeResult[]
           {r.duration ? ` · ${fmt(r.duration)}` : ''}
         </div>
       </div>
+      {/* Narrow screens show the beats animation for the playing row instead
+          of a Play button — tapping the row itself plays or pauses. */}
+      {playingNow && (
+        <span className="eq-mini yt-beats" aria-label="Playing">
+          <i /><i /><i />
+        </span>
+      )}
       <button
-        className="btn btn-primary sm"
+        type="button"
+        className="btn btn-primary sm yt-play"
         onClick={(e) => {
           e.stopPropagation();
           listen();
@@ -84,15 +97,17 @@ function YoutubeRow({ r, results }: { r: YoutubeResult; results: YoutubeResult[]
         {playingNow ? 'Pause' : 'Play'}
       </button>
       <button
-        className="btn btn-secondary sm"
+        type="button"
+        className="btn btn-secondary sm icon yt-import"
         onClick={(e) => {
           e.stopPropagation();
           importAndPlay();
         }}
         disabled={importMut.isPending}
+        title={importMut.isPending ? 'Importing…' : 'Import to your library'}
+        aria-label={importMut.isPending ? 'Importing' : `Import ${r.title} to your library`}
       >
-        <Icon name={importMut.isPending ? 'loader' : 'download'} size={15} />
-        {importMut.isPending ? 'Importing…' : 'Import & play'}
+        <Icon name={importMut.isPending ? 'loader' : 'download'} size={16} />
       </button>
     </div>
   );

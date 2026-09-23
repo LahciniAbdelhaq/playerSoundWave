@@ -1,6 +1,8 @@
 'use client';
 import { create } from 'zustand';
-import type { Song } from '@/lib/types';
+import { isPreview, type Song } from '@/lib/types';
+import { api } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth';
 import { youtube } from '@/lib/youtubePlayer';
 
 export type RepeatMode = 'off' | 'all' | 'one';
@@ -50,7 +52,17 @@ export function getAudio(): HTMLAudioElement {
  */
 const onYoutube = () => !!usePlayerStore.getState().current?.youtubeId;
 
+/**
+ * Log the play so it shows up in listening history. Signed-in users only, and
+ * never for previews (those aren't in the library). Failures are ignored.
+ */
+const recordPlay = (song: Song) => {
+  if (isPreview(song) || !useAuthStore.getState().accessToken) return;
+  api.post('/api/history', { songId: song.id }).catch(() => undefined);
+};
+
 const load = (song: Song, autoplay: boolean) => {
+  if (autoplay) recordPlay(song);
   const el = getAudio();
   if (song.youtubeId) {
     el.pause();
